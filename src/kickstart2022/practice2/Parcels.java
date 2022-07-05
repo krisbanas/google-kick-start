@@ -1,9 +1,13 @@
 package kickstart2022.practice2;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 
 public class Parcels {
+    private static final int[][] directions = {{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         int T = scanner.nextInt();
@@ -28,7 +32,7 @@ public class Parcels {
     private static int minimumDeliveryTime(int[][] deliveryOffices) {
         print("Original state:", deliveryOffices);
 
-        fillDeliveryDates(deliveryOffices);
+        bfsAndFill(deliveryOffices);
         print("Original fields:", deliveryOffices);
 
         int[] maxCoordinates = getCoordinatesOfMaxValue(deliveryOffices);
@@ -38,7 +42,7 @@ public class Parcels {
         deliveryOffices[maxCoordinates[0]][maxCoordinates[1]] = 0;
         print("With added office:", deliveryOffices);
 
-        fillDeliveryDates(deliveryOffices);
+        bfsAndFill(deliveryOffices);
         print("Final solution:", deliveryOffices);
 
         int[] finalMaxCoordinates = getCoordinatesOfMaxValue(deliveryOffices);
@@ -62,34 +66,45 @@ public class Parcels {
         return maxCoordinates;
     }
 
-    private static void fillDeliveryDates(int[][] array) {
-        int currentLevel = 0;
-        for (int iteration = 0; iteration < (array.length * 2 + 1); iteration++) {
-            for (int i = 0; i < array.length; i++) {
-                for (int j = 0; j < array[0].length; j++) {
-                    int probe = array[i][j];
-                    if (probe == currentLevel) markAround(array, probe, i, j);
-                }
-            }
-            currentLevel++;
-        }
-    }
-
-    private static void markAround(int[][] deliveryOffices, int probe, int i, int j) {
-        for (int row = i - 1; row <= i + 1; row++) {
-            for (int col = j - 1; col <= j + 1; col++) {
-                if (row >= 0 && col >= 0 && row < deliveryOffices.length && col < deliveryOffices[0].length && (col - i + row - j) % 2 != 0)
-                    if (deliveryOffices[row][col] > probe + 1) deliveryOffices[row][col] = probe + 1;
-            }
-        }
-    }
-
     private static void print(String x, int[][] deliveryOffices) {
         System.out.println();
         System.out.println(x);
         for (int[] array : deliveryOffices) {
             System.out.println(Arrays.toString(array));
         }
+    }
+
+    private static void bfsAndFill(int[][] matrix) {
+        Queue<int[]> queue = new LinkedList<>();
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
+                if (matrix[i][j] == 0) queue.offer(new int[]{i, j});
+            }
+        }
+        int level = 1;
+
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                final int[] point = queue.poll();
+                int finalLevel = level;
+                Arrays.stream(directions)
+                        .map(dir -> new int[]{point[0] + dir[0], point[1] + dir[1]})
+                        .filter(p -> isInMatrix(p, matrix))
+                        .filter(p -> matrix[p[0]][p[1]] > finalLevel)
+                        .forEach(p -> {
+                            matrix[p[0]][p[1]] = finalLevel;
+                            queue.offer(new int[]{p[0], p[1]});
+                        });
+            }
+            level++;
+        }
+    }
+
+    private static boolean isInMatrix(int[] point, int[][] matrix) {
+        int x = point[0];
+        int y = point[1];
+        return x >= 0 && x < matrix.length && y >= 0 && y < matrix[0].length;
     }
 }
 
