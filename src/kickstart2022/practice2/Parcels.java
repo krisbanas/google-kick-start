@@ -6,20 +6,21 @@ import java.util.Queue;
 import java.util.Scanner;
 
 public class Parcels {
+
     private static final int[][] directions = {{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        int T = scanner.nextInt();
+        final var scanner = new Scanner(System.in);
+        int numberOfTestCases = scanner.nextInt();
 
-        for (int testCase = 1; testCase <= T; ++testCase) {
-            int R = scanner.nextInt();
-            int C = scanner.nextInt();
-            int[][] deliveryOffices = new int[R][C];
+        for (int testCase = 1; testCase <= numberOfTestCases; ++testCase) {
+            int rows = scanner.nextInt();
+            int columns = scanner.nextInt();
+            int[][] deliveryOffices = new int[rows][columns];
 
-            for (int row = 0; row < R; ++row) {
+            for (int row = 0; row < rows; ++row) {
                 String line = scanner.next();
-                for (int col = 0; col < C; ++col) {
+                for (int col = 0; col < columns; ++col) {
                     deliveryOffices[row][col] = line.charAt(col) - '0' - 1;
                     if (deliveryOffices[row][col] == -1) deliveryOffices[row][col] = 999;
                 }
@@ -30,47 +31,57 @@ public class Parcels {
     }
 
     private static int minimumDeliveryTime(int[][] deliveryOffices) {
-        Printer.print("Original state:", deliveryOffices);
-
         bfsAndFill(deliveryOffices);
-        Printer.print("Original fields:", deliveryOffices);
+        int answer = getMaxValue(deliveryOffices);
+        int low = 0, high = answer - 1;
 
-        int[] maxCoordinates = getCoordinatesOfMaxValue(deliveryOffices);
-        System.out.println("Max: " + deliveryOffices[maxCoordinates[0]][maxCoordinates[1]]);
-        System.out.println("Max coordinates: " + Arrays.toString(maxCoordinates));
+        while (low <= high) {
+            int mid = (low + high) / 2;
+            if (isPossible(deliveryOffices, mid)) {
+                answer = mid;
+                high = mid - 1;
+            } else {
+                low = mid + 1;
+            }
+        }
 
-        deliveryOffices[maxCoordinates[0]][maxCoordinates[1]] = 0;
-        Printer.print("With added office:", deliveryOffices);
-
-        bfsAndFill(deliveryOffices);
-        Printer.print("Final solution:", deliveryOffices);
-
-        int[] finalMaxCoordinates = getCoordinatesOfMaxValue(deliveryOffices);
-        System.out.println("Max: " + deliveryOffices[finalMaxCoordinates[0]][finalMaxCoordinates[1]]);
-        System.out.println("Max coordinates: " + Arrays.toString(finalMaxCoordinates));
-
-        return deliveryOffices[finalMaxCoordinates[0]][finalMaxCoordinates[1]];
+        return answer;
     }
 
-    private static int[] getCoordinatesOfMaxValue(int[][] deliveryOffices) {
-        int max = 0;
-        int[] maxCoordinates = new int[2];
+    private static boolean isPossible(int[][] deliveryOffices, int distance) {
+        int maxSum = Integer.MIN_VALUE;
+        int minSum = Integer.MAX_VALUE;
+        int maxDif = Integer.MIN_VALUE;
+        int minDif = Integer.MAX_VALUE;
+
         for (int i = 0; i < deliveryOffices.length; i++) {
             for (int j = 0; j < deliveryOffices[0].length; j++) {
-                if (deliveryOffices[i][j] > max) {
-                    max = Math.max(max, deliveryOffices[i][j]);
-                    maxCoordinates = new int[]{i, j};
+                if (deliveryOffices[i][j] > distance) {
+                    maxSum = Math.max(maxSum, i + j);
+                    minSum = Math.min(minSum, i + j);
+                    maxDif = Math.max(maxDif, i - j);
+                    minDif = Math.min(minDif, i - j);
                 }
             }
         }
-        return maxCoordinates;
+        for (int i = 0; i < deliveryOffices.length; i++) {
+            for (int j = 0; j < deliveryOffices[0].length; j++) {
+                int current = 0;
+                current = Math.max(current, Math.abs(maxSum - (i + j)));
+                current = Math.max(current, Math.abs(minSum - (i + j)));
+                current = Math.max(current, Math.abs(maxDif - (i - j)));
+                current = Math.max(current, Math.abs(minDif - (i - j)));
+                if (current <= distance) return true;
+            }
+        }
+        return false;
     }
 
-    private static void bfsAndFill(int[][] matrix) {
+    private static void bfsAndFill(int[][] deliveryOffices) {
         Queue<int[]> queue = new LinkedList<>();
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[0].length; j++) {
-                if (matrix[i][j] == 0) queue.offer(new int[]{i, j});
+        for (int i = 0; i < deliveryOffices.length; i++) {
+            for (int j = 0; j < deliveryOffices[0].length; j++) {
+                if (deliveryOffices[i][j] == 0) queue.offer(new int[]{i, j});
             }
         }
         int level = 1;
@@ -82,15 +93,25 @@ public class Parcels {
                 int finalLevel = level;
                 Arrays.stream(directions)
                         .map(dir -> new int[]{point[0] + dir[0], point[1] + dir[1]})
-                        .filter(p -> isInMatrix(p, matrix))
-                        .filter(p -> matrix[p[0]][p[1]] > finalLevel)
+                        .filter(p -> isInMatrix(p, deliveryOffices))
+                        .filter(p -> deliveryOffices[p[0]][p[1]] > finalLevel)
                         .forEach(p -> {
-                            matrix[p[0]][p[1]] = finalLevel;
+                            deliveryOffices[p[0]][p[1]] = finalLevel;
                             queue.offer(new int[]{p[0], p[1]});
                         });
             }
             level++;
         }
+    }
+
+    private static int getMaxValue(int[][] deliveryOffices) {
+        int max = 0;
+        for (int[] deliveryOffice : deliveryOffices) {
+            for (int j = 0; j < deliveryOffices[0].length; j++) {
+                max = Math.max(max, deliveryOffice[j]);
+            }
+        }
+        return max;
     }
 
     private static boolean isInMatrix(int[] point, int[][] matrix) {
@@ -99,4 +120,3 @@ public class Parcels {
         return x >= 0 && x < matrix.length && y >= 0 && y < matrix[0].length;
     }
 }
-
