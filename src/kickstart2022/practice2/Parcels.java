@@ -30,20 +30,20 @@ public class Parcels {
     }
 
     private static int minimumDeliveryTime(int[][] deliveryOffices) {
-        print("Original state:", deliveryOffices);
+        Printer.print("Original state:", deliveryOffices);
 
         bfsAndFill(deliveryOffices);
-        print("Original fields:", deliveryOffices);
+        Printer.print("Original fields:", deliveryOffices);
 
         int[] maxCoordinates = getCoordinatesOfMaxValue(deliveryOffices);
         System.out.println("Max: " + deliveryOffices[maxCoordinates[0]][maxCoordinates[1]]);
         System.out.println("Max coordinates: " + Arrays.toString(maxCoordinates));
 
         deliveryOffices[maxCoordinates[0]][maxCoordinates[1]] = 0;
-        print("With added office:", deliveryOffices);
+        Printer.print("With added office:", deliveryOffices);
 
         bfsAndFill(deliveryOffices);
-        print("Final solution:", deliveryOffices);
+        Printer.print("Final solution:", deliveryOffices);
 
         int[] finalMaxCoordinates = getCoordinatesOfMaxValue(deliveryOffices);
         System.out.println("Max: " + deliveryOffices[finalMaxCoordinates[0]][finalMaxCoordinates[1]]);
@@ -64,14 +64,6 @@ public class Parcels {
             }
         }
         return maxCoordinates;
-    }
-
-    private static void print(String x, int[][] deliveryOffices) {
-        System.out.println();
-        System.out.println(x);
-        for (int[] array : deliveryOffices) {
-            System.out.println(Arrays.toString(array));
-        }
     }
 
     private static void bfsAndFill(int[][] matrix) {
