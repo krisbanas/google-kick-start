@@ -54,6 +54,7 @@ public class Parcels {
         int maxDif = Integer.MIN_VALUE;
         int minDif = Integer.MAX_VALUE;
 
+        /* Find contributing factors */
         for (int i = 0; i < deliveryOffices.length; i++) {
             for (int j = 0; j < deliveryOffices[0].length; j++) {
                 if (deliveryOffices[i][j] > distance) {
@@ -64,6 +65,8 @@ public class Parcels {
                 }
             }
         }
+
+        /* Find possible quicker route */
         for (int i = 0; i < deliveryOffices.length; i++) {
             for (int j = 0; j < deliveryOffices[0].length; j++) {
                 int current = 0;
